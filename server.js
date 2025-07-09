@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // Gemini API key - in production, use environment variables
-const GEMINI_API_KEY = 'AIzaSyBdmJafDA7pVwj7cshLLi1PMfzsuxxkoy8';
+const GEMINI_API_KEY = 'AIzaSyAWlEIX8diWiViiSCiY2Le2dZF2mHLLv5g';
 
 // AI Generation endpoint
 app.post('/api/ai/generate-summary', async (req, res) => {
@@ -56,8 +56,11 @@ Example format:
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
-    }
+    const errorBody = await response.text(); // Try to get text first
+    // Or if you expect JSON error: const errorBody = await response.json();
+    console.error('Gemini error response body:', errorBody); // Log this!
+    throw new Error(`Gemini API error ${response.status}: ${errorBody}`);
+}
 
     const data = await response.json();
     
@@ -124,8 +127,11 @@ Example format:
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
-    }
+    const errorBody = await response.text(); // Try to get text first
+    // Or if you expect JSON error: const errorBody = await response.json();
+    console.error('Gemini error response body:', errorBody); // Log this!
+    throw new Error(`Gemini API error ${response.status}: ${errorBody}`);
+}
 
     const data = await response.json();
     
@@ -194,8 +200,11 @@ CSS: [Complete CSS code]`;
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
-    }
+    const errorBody = await response.text(); // Try to get text first
+    // Or if you expect JSON error: const errorBody = await response.json();
+    console.error('Gemini error response body:', errorBody); // Log this!
+    throw new Error(`Gemini API error ${response.status}: ${errorBody}`);
+}
 
     const data = await response.json();
     
