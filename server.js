@@ -10,15 +10,8 @@ const PORT = process.env.PORT || 3002;
 app.use(cors());
 app.use(express.json());
 
-// AI API key - in production, use environment variables
-const GEMINI_API_KEY = 'AIzaSyCogE57ssMRpBtEeK-iM8_vwsK_xE1h7G4';
-
-const MODELS = {
-    
-    SUMMARY: ['gemini-1.5-flash','gemini-2.5-flash-lite-preview-06-17', 'gemini-pro', 'gemini-1.5-pro'],
-    EXPERIENCE: ['gemini-1.5-flash','gemini-2.5-flash-lite-preview-06-17', 'gemini-pro', 'gemini-1.5-pro'],
-    TEMPLATE: ['gemini-1.5-flash','gemini-2.5-flash-lite-preview-06-17', 'gemini-1.5-pro', 'gemini-pro'], // gemini-1.5-pro might be better for template
-};
+// Gemini API key - in production, use environment variables
+const GEMINI_API_KEY = 'AIzaSyBdmJafDA7pVwj7cshLLi1PMfzsuxxkoy8';
 
 // AI Generation endpoint
 app.post('/api/ai/generate-summary', async (req, res) => {
@@ -46,13 +39,9 @@ Example format:
 • Experienced [role] with X+ years expertise in [key skills] and [specialization]
 • Proven track record of [specific achievement] resulting in [quantifiable result]
 • Strong background in [core competency] with focus on [value proposition]
-• Skilled in [technical/soft skills] with ability to [key strength]
+• Skilled in [technical/soft skills] with ability to [key strength]`;
 
-Just give the summary no need to write anything extra like : Here are a few options for John Smith's Senior Software Engineer resume summary, catering to slightly different emphases. Choose the one that best reflects his specific experience:
-
-**Option 1 (Focus on Architecture & Impact):**, Here's a professional resume summary for John Smith, Senior Software Engineer:`;
-
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-06-17:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -67,10 +56,7 @@ Just give the summary no need to write anything extra like : Here are a few opti
     });
 
     if (!response.ok) {
-        const errorBody = await response.text(); // Try to get text first
-        // Or if you expect JSON error: const errorBody = await response.json();
-        console.error('AI error response body:', errorBody); // Log this!
-        throw new Error(`AI API error ${response.status}: ${errorBody}`);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -82,7 +68,7 @@ Just give the summary no need to write anything extra like : Here are a few opti
         summary: generatedSummary
       });
     } else {
-      throw new Error('Invalid response from AI API');
+      throw new Error('Invalid response from Gemini API');
     }
   } catch (error) {
     console.error('AI generation error:', error);
@@ -123,7 +109,7 @@ Example format:
 • Managed [responsibility] while maintaining [quality standard] and achieving [result]
 • Collaborated with [stakeholders] to deliver [outcome] exceeding [benchmark] by [amount]`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-06-17:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -138,10 +124,7 @@ Example format:
     });
 
     if (!response.ok) {
-        const errorBody = await response.text(); // Try to get text first
-        // Or if you expect JSON error: const errorBody = await response.json();
-        console.error('AI error response body:', errorBody); // Log this!
-        throw new Error(`AI API error ${response.status}: ${errorBody}`);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -153,7 +136,7 @@ Example format:
         description: generatedDescription
       });
     } else {
-      throw new Error('Invalid response from AI API');
+      throw new Error('Invalid response from Gemini API');
     }
   } catch (error) {
     console.error('AI generation error:', error);
@@ -196,7 +179,7 @@ DESCRIPTION: [Brief description]
 HTML: [Complete HTML code with Handlebars]
 CSS: [Complete CSS code]`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-06-17:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -211,10 +194,7 @@ CSS: [Complete CSS code]`;
     });
 
     if (!response.ok) {
-        const errorBody = await response.text(); // Try to get text first
-        // Or if you expect JSON error: const errorBody = await response.json();
-        console.error('AI error response body:', errorBody); // Log this!
-        throw new Error(`AI API error ${response.status}: ${errorBody}`);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -240,7 +220,7 @@ CSS: [Complete CSS code]`;
         throw new Error('Failed to parse AI response');
       }
     } else {
-      throw new Error('Invalid response from AI API');
+      throw new Error('Invalid response from Gemini API');
     }
   } catch (error) {
     console.error('AI generation error:', error);
