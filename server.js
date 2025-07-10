@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // Gemini API key - in production, use environment variables
-const GEMINI_API_KEY = 'AIzaSyAWlEIX8diWiViiSCiY2Le2dZF2mHLLv5g';
+const GEMINI_API_KEY = 'AIzaSyBmE7h85j2gCHUuqtkofhZcjtRYwN-8O78';
 
 // AI Generation endpoint
 app.post('/api/ai/generate-summary', async (req, res) => {
