@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
@@ -12,6 +11,178 @@ app.use(express.json());
 
 // Gemini API key - in production, use environment variables
 const GEMINI_API_KEY = 'AIzaSyBmE7h85j2gCHUuqtkofhZcjtRYwN-8O78';
+
+// AI Resume Generation endpoint - NEW
+app.post('/api/ai/generate-resume', async (req, res) => {
+  try {
+    const { summary } = req.body;
+    
+    if (!summary) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: summary'
+      });
+    }
+
+    const prompt = `You are an expert resume builder. Create a complete professional resume based on this summary: "${summary}".
+
+Generate a structured resume with:
+1. Extract or create a professional name from the summary
+2. Create realistic contact information (use placeholder emails)
+3. Write a professional summary
+4. Create 2-3 relevant work experiences with bullet points
+5. Add appropriate education background
+6. List relevant skills (6-8 skills)
+
+Return the response in this EXACT JSON format:
+{
+  "personalInfo": {
+    "fullName": "extracted or generated name",
+    "email": "professional.email@example.com",
+    "phone": "+1 (555) 123-4567",
+    "location": "City, State",
+    "summary": "professional summary based on input"
+  },
+  "experiences": [
+    {
+      "id": "1",
+      "jobTitle": "relevant job title",
+      "company": "Company Name",
+      "location": "City, State",
+      "startDate": "2022-01",
+      "endDate": "",
+      "current": true,
+      "description": "• Achievement 1\\n• Achievement 2\\n• Achievement 3"
+    }
+  ],
+  "education": [
+    {
+      "id": "1",
+      "degree": "relevant degree",
+      "school": "University Name",
+      "location": "City, State",
+      "graduationDate": "2022-05"
+    }
+  ],
+  "skills": [
+    {"id": "1", "name": "skill1", "level": "intermediate"},
+    {"id": "2", "name": "skill2", "level": "intermediate"}
+  ]
+}`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.candidates && data.candidates[0].content.parts[0].text) {
+      const generatedContent = data.candidates[0].content.parts[0].text.trim();
+      
+      try {
+        // Try to parse JSON from response
+        const jsonMatch = generatedContent.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const resumeData = JSON.parse(jsonMatch[0]);
+          res.json({
+            success: true,
+            resume: resumeData
+          });
+        } else {
+          throw new Error('No JSON found in response');
+        }
+      } catch (parseError) {
+        // Fallback structured response
+        res.json({
+          success: true,
+          resume: createFallbackResume(summary)
+        });
+      }
+    } else {
+      throw new Error('Invalid response from Gemini API');
+    }
+  } catch (error) {
+    console.error('AI resume generation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate resume',
+      details: error.message
+    });
+  }
+});
+
+function createFallbackResume(summary) {
+  const summaryLower = summary.toLowerCase();
+  
+  // Extract potential name
+  const nameMatch = summary.match(/(?:i am|my name is|i'm)\s+([a-zA-Z\s]+)/i);
+  const extractedName = nameMatch ? nameMatch[1].trim() : 'Professional User';
+  
+  // Determine field and skills
+  let field = 'Technology';
+  let jobTitle = 'Software Engineer';
+  let skills = ['JavaScript', 'React', 'Node.js', 'Python', 'Git', 'SQL'];
+  
+  if (summaryLower.includes('marketing') || summaryLower.includes('sales')) {
+    field = 'Marketing';
+    jobTitle = 'Marketing Specialist';
+    skills = ['Digital Marketing', 'SEO', 'Content Creation', 'Analytics', 'Social Media', 'Campaign Management'];
+  } else if (summaryLower.includes('design') || summaryLower.includes('creative')) {
+    field = 'Design';
+    jobTitle = 'UI/UX Designer';
+    skills = ['Figma', 'Photoshop', 'User Research', 'Wireframing', 'Prototyping', 'Adobe Creative Suite'];
+  } else if (summaryLower.includes('data') || summaryLower.includes('analyst')) {
+    field = 'Data Science';
+    jobTitle = 'Data Analyst';
+    skills = ['Python', 'SQL', 'Excel', 'Tableau', 'Power BI', 'Statistics'];
+  }
+
+  return {
+    personalInfo: {
+      fullName: extractedName,
+      email: `${extractedName.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+      phone: '+1 (555) 123-4567',
+      location: 'City, State',
+      summary: summary
+    },
+    experiences: [{
+      id: '1',
+      jobTitle: jobTitle,
+      company: 'Previous Company',
+      location: 'City, State',
+      startDate: '2022-01',
+      endDate: '',
+      current: true,
+      description: `• Led key projects in ${field.toLowerCase()} with measurable impact\n• Collaborated with cross-functional teams to deliver results\n• Implemented best practices and improved processes\n• Achieved significant improvements in team efficiency`
+    }],
+    education: [{
+      id: '1',
+      degree: `Bachelor of Science in ${field}`,
+      school: 'University Name',
+      location: 'City, State',
+      graduationDate: '2022-05'
+    }],
+    skills: skills.map((skill, index) => ({
+      id: (index + 1).toString(),
+      name: skill,
+      level: 'intermediate'
+    }))
+  };
+}
 
 // AI Generation endpoint
 app.post('/api/ai/generate-summary', async (req, res) => {
@@ -56,11 +227,8 @@ Example format:
     });
 
     if (!response.ok) {
-    const errorBody = await response.text(); // Try to get text first
-    // Or if you expect JSON error: const errorBody = await response.json();
-    console.error('Gemini error response body:', errorBody); // Log this!
-    throw new Error(`Gemini API error ${response.status}: ${errorBody}`);
-}
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
 
     const data = await response.json();
     
@@ -110,9 +278,7 @@ Example format:
 • Led [specific project/team] resulting in [quantifiable outcome] within [timeframe]
 • Developed [solution/process] that improved [metric] by [percentage/amount]
 • Managed [responsibility] while maintaining [quality standard] and achieving [result]
-• Collaborated with [stakeholders] to deliver [outcome] exceeding [benchmark] by [amount]
-
-dont forget to add - or • in starting of each point`;
+• Collaborated with [stakeholders] to deliver [outcome] exceeding [benchmark] by [amount]`;
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -129,11 +295,8 @@ dont forget to add - or • in starting of each point`;
     });
 
     if (!response.ok) {
-    const errorBody = await response.text(); // Try to get text first
-    // Or if you expect JSON error: const errorBody = await response.json();
-    console.error('Gemini error response body:', errorBody); // Log this!
-    throw new Error(`Gemini API error ${response.status}: ${errorBody}`);
-}
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
 
     const data = await response.json();
     
@@ -202,11 +365,8 @@ CSS: [Complete CSS code]`;
     });
 
     if (!response.ok) {
-    const errorBody = await response.text(); // Try to get text first
-    // Or if you expect JSON error: const errorBody = await response.json();
-    console.error('Gemini error response body:', errorBody); // Log this!
-    throw new Error(`Gemini API error ${response.status}: ${errorBody}`);
-}
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
 
     const data = await response.json();
     
