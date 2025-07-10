@@ -110,7 +110,9 @@ Example format:
 • Led [specific project/team] resulting in [quantifiable outcome] within [timeframe]
 • Developed [solution/process] that improved [metric] by [percentage/amount]
 • Managed [responsibility] while maintaining [quality standard] and achieving [result]
-• Collaborated with [stakeholders] to deliver [outcome] exceeding [benchmark] by [amount]`;
+• Collaborated with [stakeholders] to deliver [outcome] exceeding [benchmark] by [amount]
+
+dont forget to add - or • in starting of each point`;
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
